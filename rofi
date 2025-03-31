@@ -1,0 +1,59 @@
+#!/usr/bin/ruby
+require 'tempfile'
+
+# Close existing rofi window if already running
+if (rofi_window = `wmctrl -l | awk '$4 == "rofi" {print $1}'`.strip) != ''
+  puts "Closing existing rofi window: #{rofi_window}"
+  `wmctrl -i -c #{rofi_window}`
+end
+exit 0
+
+# Get current desktop and window list
+current_desktop = `wmctrl -d | awk '$2 == "*" {print $1}'`.strip.to_i
+windows = {}
+
+# Parse window information
+`wmctrl -l -p -x`.each_line do |line|
+  parts = line.split
+  window_id = parts[0]
+  desktop = parts[1].to_i
+  pid = parts[2]
+  window_class = parts[3]
+  window_name = parts[5..-1].join(' ')
+  
+  # Get process name
+  cmd = `ps -p #{pid} -o comm=`.strip
+  
+  # Skip desktop and panel windows
+  next if (cmd == "caja" && window_name == "Desktop") || cmd == "mate-panel"
+  
+  windows[window_id] = {
+    desktop: desktop,
+    cmd: cmd,
+    w_name: window_name,
+    w_class: window_class
+  }
+end
+
+# Sort windows by desktop priority
+sorted_windows = windows.sort_by { |_, w| [w[:desktop] == current_desktop ? 0 : 1, w[:desktop]] }.to_h
+
+# Format window list for display
+list = sorted_windows.map do |id, w|
+  cmd = w[:cmd][0..39]
+  name = w[:w_name][0..39]
+  class_name = w[:w_class][0..39]
+  "#{cmd.ljust(40)} #{name.ljust(40)} #{class_name.ljust(40)} #{id}"
+end.join("\n")
+
+# Create temporary files for fzf
+File.write("/tmp/fzf_list", list)
+File.write("/tmp/fzf_exec", <<~BASH)
+  #!/usr/bin/bash
+  selected=$(cat /tmp/fzf_list | fzf | sed 's/.*0x/0x/g')
+  wmctrl -i -a $selected
+BASH
+File.chmod(0744, "/tmp/fzf_exec")
+
+# Launch fzf in st terminal
+system("st -g 124x30+1200+800 -f 'Monospace:size=12' -t 'rofi' -- /tmp/fzf_exec") 
