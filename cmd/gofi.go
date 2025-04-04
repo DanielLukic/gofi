@@ -14,17 +14,10 @@ import (
 func main() {
 	// Parse command line flags
 	tuiMode := flag.Bool("tui", false, "Use terminal UI mode")
-	terminal := flag.String("terminal", "st", "Terminal emulator to use (st or xterm)")
 	flag.Parse()
 
-	// Validate terminal option
-	if *terminal != "st" && *terminal != "xterm" {
-		fmt.Fprintf(os.Stderr, "Error: --terminal must be either 'st' or 'xterm'\n")
-		os.Exit(1)
-	}
-
 	// Check dependencies
-	if err := pkg.CheckDependencies(*terminal); err != nil {
+	if err := pkg.CheckDependencies(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -43,8 +36,7 @@ func main() {
 		selectedWindow, err = selector.SelectWindow()
 	} else {
 		// Use FZF mode (default)
-		selector := pkg.NewFzfSelector(manager, filter)
-		selector.SetTerminal(*terminal)
+		selector := pkg.NewFzfSelector(filter)
 		if err := selector.SelectWindow(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error launching window selector: %v\n", err)
 			os.Exit(1)

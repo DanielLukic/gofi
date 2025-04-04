@@ -5,6 +5,8 @@ go 1.24.1
 require github.com/ktr0731/go-fuzzyfinder v0.8.0
 
 require (
+	github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc // indirect
+	github.com/BurntSushi/xgbutil v0.0.0-20190907113008-ad855c713046 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.6.0 // indirect
 	github.com/ktr0731/go-ansisgr v0.1.0 // indirect

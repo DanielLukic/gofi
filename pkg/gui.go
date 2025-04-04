@@ -8,53 +8,37 @@ import (
 	"strings"
 )
 
-// FzfSelector implements window selection using FZF
 type FzfSelector struct {
-	manager  Manager
-	filter   Filter
-	terminal string
+	filter Filter
+	X      *XUtil
 }
 
-// NewFzfSelector creates a new FzfSelector instance
-func NewFzfSelector(manager Manager, filter Filter) *FzfSelector {
-	return &FzfSelector{
-		manager:  manager,
-		filter:   filter,
-		terminal: "st", // default terminal
-	}
-}
-
-// SetTerminal sets the terminal emulator to use
-func (s *FzfSelector) SetTerminal(terminal string) {
-	s.terminal = terminal
-}
-
-// SelectWindow opens a terminal with FZF for window selection
-func (s *FzfSelector) SelectWindow() error {
-	// Get windows and filter them
-	windows := s.manager.GetWindows()
-
-	// Close any existing gofi instances (fire & forget)
-	s.closeExistingInstance(windows)
-
-	var filteredWindows []Window
-	for _, w := range windows {
-		if s.filter.ShouldInclude(w) {
-			filteredWindows = append(filteredWindows, w)
-		}
-	}
-
-	// Sort windows by desktop
-	currentDesktop, err := s.manager.GetCurrentDesktop()
+func NewFzfSelector(filter Filter) *FzfSelector {
+	x, err := NewXUtil()
 	if err != nil {
-		return err
+		fmt.Printf("Failed to connect to X server: %v\n", err)
 	}
-	filteredWindows = SortWindows(filteredWindows, currentDesktop)
 
-	// Prepare the list for fzf
-	list := s.prepareFzfList(filteredWindows)
+	return &FzfSelector{
+		filter: filter,
+		X:      x,
+	}
+}
 
-	// Write list to temporary file
+func (s *FzfSelector) Close() {
+	if s.X != nil {
+		s.X.Close()
+		s.X = nil
+	}
+}
+
+func (s *FzfSelector) SelectWindow() error {
+	windows, _ := ListWindows(s.X)
+
+	s._close_existing_instance(windows)
+
+	list := s._prepare_fzf_list(windows)
+
 	tmpDir := os.TempDir()
 	listFile := filepath.Join(tmpDir, "fzf_list")
 	execFile := filepath.Join(tmpDir, "fzf_exec")
@@ -80,18 +64,8 @@ wmctrl -i -a $selected`
 		return fmt.Errorf("error writing exec file: %v", err)
 	}
 
-	// Launch terminal with fzf
-	var cmd *exec.Cmd
-	switch s.terminal {
-	case "st":
-		cmd = exec.Command("st", "-g", "124x30+1200+800", "-f", "Monospace:size=12", "-t", "gofi", "--", execFile)
-	case "xterm":
-		cmd = exec.Command("xterm", "-geometry", "124x30+1200+800", "-fa", "Monospace", "-fs", "12", "-T", "gofi", "-e", execFile)
-	default:
-		return fmt.Errorf("unsupported terminal: %s", s.terminal)
-	}
+	cmd := exec.Command("st", "-g", "124x30+1200+800", "-f", "Monospace:size=12", "-t", "gofi", "--", execFile)
 
-	// Start the command and wait a moment to ensure it launches properly
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("error launching terminal: %v", err)
 	}
@@ -99,43 +73,39 @@ wmctrl -i -a $selected`
 	return nil
 }
 
-// closeExistingInstance checks if there's already a gofi instance running and closes it
-func (s *FzfSelector) closeExistingInstance(windows []Window) {
+func (s *FzfSelector) _close_existing_instance(windows []Window) {
 	for _, w := range windows {
-		// Look for a window with "gofi" in the title and "st" as the command
 		if strings.Contains(w.Title, "gofi") && w.Command == "st" {
-			// Close the window using wmctrl (fire & forget)
 			exec.Command("wmctrl", "-i", "-c", w.ID).Run()
 		}
 	}
 }
 
-func (s *FzfSelector) prepareFzfList(windows []Window) string {
-	// Calculate maximum widths
+func (s *FzfSelector) _prepare_fzf_list(windows []Window) string {
 	maxCmdLen := 15
 	maxTitleLen := 55
 	maxClassLen := 30
 
 	var lines []string
 	for _, window := range windows {
-		cmd := s.truncateString(window.Command, maxCmdLen)
-		title := s.truncateString(window.Title, maxTitleLen)
-		class := s.truncateString(window.Name, maxClassLen) // Use full class name
+		cmd := s._truncate(window.Command, maxCmdLen)
+		title := s._truncate(window.Title, maxTitleLen)
+		class := s._truncate(window.Name, maxClassLen) // Use full class name
 
-		// Format according to rufi.rb order
 		line := fmt.Sprintf("%d: %-*s %-*s %-*s %s",
 			window.Desktop,
 			maxCmdLen, cmd,
 			maxTitleLen, title,
 			maxClassLen, class,
 			window.ID)
+
 		lines = append(lines, line)
 	}
 
 	return strings.Join(lines, "\n")
 }
 
-func (s *FzfSelector) truncateString(str string, maxLen int) string {
+func (s *FzfSelector) _truncate(str string, maxLen int) string {
 	if len(str) > maxLen {
 		return str[:maxLen]
 	}
