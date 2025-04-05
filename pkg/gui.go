@@ -8,36 +8,18 @@ import (
 	"strings"
 )
 
-type FzfSelector struct {
-	filter Filter
-	X      *XUtil
-}
-
-func NewFzfSelector(filter Filter) *FzfSelector {
+func GuiSelectWindow() error {
 	x, err := NewXUtil()
 	if err != nil {
-		fmt.Printf("Failed to connect to X server: %v\n", err)
+		return fmt.Errorf("failed to connect to X server: %v", err)
 	}
+	defer x.Close()
 
-	return &FzfSelector{
-		filter: filter,
-		X:      x,
-	}
-}
+	windows, _ := ListWindows(x)
 
-func (s *FzfSelector) Close() {
-	if s.X != nil {
-		s.X.Close()
-		s.X = nil
-	}
-}
+	_close_existing_instance(windows)
 
-func (s *FzfSelector) SelectWindow() error {
-	windows, _ := ListWindows(s.X)
-
-	s._close_existing_instance(windows)
-
-	list := s._prepare_fzf_list(windows)
+	list := _prepare_fzf_list(windows)
 
 	tmpDir := os.TempDir()
 	listFile := filepath.Join(tmpDir, "fzf_list")
@@ -73,7 +55,7 @@ wmctrl -i -a $selected`
 	return nil
 }
 
-func (s *FzfSelector) _close_existing_instance(windows []Window) {
+func _close_existing_instance(windows []Window) {
 	for _, w := range windows {
 		if strings.Contains(w.Title, "gofi") && w.Command == "st" {
 			exec.Command("wmctrl", "-i", "-c", w.ID).Run()
@@ -81,16 +63,16 @@ func (s *FzfSelector) _close_existing_instance(windows []Window) {
 	}
 }
 
-func (s *FzfSelector) _prepare_fzf_list(windows []Window) string {
+func _prepare_fzf_list(windows []Window) string {
 	maxCmdLen := 15
 	maxTitleLen := 55
 	maxClassLen := 30
 
 	var lines []string
 	for _, window := range windows {
-		cmd := s._truncate(window.Command, maxCmdLen)
-		title := s._truncate(window.Title, maxTitleLen)
-		class := s._truncate(window.Name, maxClassLen) // Use full class name
+		cmd := _truncate(window.Command, maxCmdLen)
+		title := _truncate(window.Title, maxTitleLen)
+		class := _truncate(window.Name, maxClassLen) // Use full class name
 
 		line := fmt.Sprintf("%d: %-*s %-*s %-*s %s",
 			window.Desktop,
@@ -103,11 +85,4 @@ func (s *FzfSelector) _prepare_fzf_list(windows []Window) string {
 	}
 
 	return strings.Join(lines, "\n")
-}
-
-func (s *FzfSelector) _truncate(str string, maxLen int) string {
-	if len(str) > maxLen {
-		return str[:maxLen]
-	}
-	return str
 }

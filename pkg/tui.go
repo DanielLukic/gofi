@@ -2,53 +2,50 @@ package pkg
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
-// TUISelector implements window selection using terminal UI
-type TUISelector struct {
-	manager Manager
-	filter  Filter
-}
-
-// NewTUISelector creates a new TUISelector instance
-func NewTUISelector(manager Manager, filter Filter) *TUISelector {
-	return &TUISelector{
-		manager: manager,
-		filter:  filter,
-	}
-}
-
-// SelectWindow opens a terminal UI for window selection
-func (s *TUISelector) SelectWindow() (Window, error) {
-	// Get windows and filter them
-	windows := s.manager.GetWindows()
-	var filteredWindows []Window
-	for _, w := range windows {
-		if s.filter.ShouldInclude(w) {
-			filteredWindows = append(filteredWindows, w)
-		}
-	}
-	if len(filteredWindows) == 0 {
-		return Window{}, fmt.Errorf("no windows found")
-	}
-
-	// Sort windows by desktop
-	currentDesktop, err := s.manager.GetCurrentDesktop()
+func TuiSelectWindow() error {
+	x, err := NewXUtil()
 	if err != nil {
-		return Window{}, err
+		return fmt.Errorf("failed to connect to X server: %v", err)
 	}
-	filteredWindows = SortWindows(filteredWindows, currentDesktop)
+	defer x.Close()
 
-	// Prepare options for fuzzy finder
+	// Get windows using X11 direct implementation
+	windows, _ := ListWindows(x)
+
+	options := _prepare_list(windows)
+	idx, err := _select_window(options, windows)
+	if err == fuzzyfinder.ErrAbort {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error selecting window: %v", err)
+	}
+	err = _activate(windows[idx].ID)
+	if err != nil {
+		return fmt.Errorf("error focusing window: %v", err)
+	}
+
+	return nil
+}
+
+func _activate(windowID string) error {
+	cmd := exec.Command("wmctrl", "-i", "-a", windowID)
+	return cmd.Run()
+}
+
+func _prepare_list(windows []Window) []string {
 	maxTitleLen := 40
 	maxClassLen := 40
 
 	var options []string
-	for _, w := range filteredWindows {
-		title := truncateString(w.Title, maxTitleLen)
-		class := truncateString(w.Name, maxClassLen) // Use full class name
+	for _, w := range windows {
+		title := _truncate(w.Title, maxTitleLen)
+		class := _truncate(w.Name, maxClassLen) // Use full class name
 
 		// Format TUI list (no command column)
 		option := fmt.Sprintf("%d: %-*s %-*s",
@@ -57,8 +54,10 @@ func (s *TUISelector) SelectWindow() (Window, error) {
 			maxClassLen, class)
 		options = append(options, option)
 	}
+	return options
+}
 
-	// Run fuzzy finder
+func _select_window(options []string, windows []Window) (int, error) {
 	idx, err := fuzzyfinder.Find(
 		options,
 		func(i int) string {
@@ -69,7 +68,7 @@ func (s *TUISelector) SelectWindow() (Window, error) {
 			if i == -1 {
 				return ""
 			}
-			window := filteredWindows[i]
+			window := windows[i]
 			// Format desktop number in preview too
 			return fmt.Sprintf("Window Details:\n\nDesktop: %d\nCommand: %s\nTitle: %s\nClass: %s",
 				window.Desktop,
@@ -78,20 +77,5 @@ func (s *TUISelector) SelectWindow() (Window, error) {
 				window.Name)
 		}),
 	)
-
-	if err != nil {
-		if err == fuzzyfinder.ErrAbort {
-			return Window{}, nil
-		}
-		return Window{}, fmt.Errorf("error selecting window: %v", err)
-	}
-
-	return filteredWindows[idx], nil
-}
-
-func truncateString(str string, maxLen int) string {
-	if len(str) > maxLen {
-		return str[:maxLen]
-	}
-	return str
+	return idx, err
 }

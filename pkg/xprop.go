@@ -29,6 +29,15 @@ func (x *XUtil) Close() {
 
 func ListWindows(x *XUtil) ([]Window, error) {
 	var names, _ = _filtered_windows(x)
+	windows := _make_windows(names, x)
+	if len(names) > 1 {
+		// Swap first two entries:
+		windows[0], windows[1] = windows[1], windows[0]
+	}
+	return windows, nil
+}
+
+func _make_windows(names []string, x *XUtil) []Window {
 	windows := make([]Window, len(names))
 	for i, windowID := range names {
 		info, _ := _win_info(x, windowID)
@@ -42,7 +51,7 @@ func ListWindows(x *XUtil) ([]Window, error) {
 			Title:   info["Title"],
 		}
 	}
-	return windows, nil
+	return windows
 }
 
 func _filtered_windows(x *XUtil) ([]string, error) {
