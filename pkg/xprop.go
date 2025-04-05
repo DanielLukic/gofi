@@ -108,6 +108,56 @@ func _win_info(x *XUtil, windowID string) (map[string]string, error) {
 	return info, nil
 }
 
+func get_active_window(x *XUtil) (string, error) {
+	// Get the active window from EWMH
+	active, err := ewmh.ActiveWindowGet(x.X)
+	if err != nil {
+		return "", fmt.Errorf("failed to get active window: %v", err)
+	}
+
+	// Convert to hex string format
+	return fmt.Sprintf("0x%x", active), nil
+}
+
+// setup_active_window_events sets up the X connection to listen for active window changes
+func setup_active_window_events(x *XUtil, callback func(string)) error {
+	// Get the _NET_ACTIVE_WINDOW atom
+	net_active_window, err := xprop.Atm(x.X, "_NET_ACTIVE_WINDOW")
+	if err != nil {
+		return fmt.Errorf("failed to get _NET_ACTIVE_WINDOW atom: %v", err)
+	}
+
+	// Set up event mask on root window to listen for property changes
+	root := x.X.RootWin()
+	xproto.ChangeWindowAttributes(x.X.Conn(), root, xproto.CwEventMask,
+		[]uint32{xproto.EventMaskPropertyChange})
+
+	// Start a goroutine to listen for events
+	go func() {
+		for {
+			ev, err := x.X.Conn().WaitForEvent()
+			if err != nil {
+				continue
+			}
+
+			// Check if it's a property notify event
+			if propEv, ok := ev.(xproto.PropertyNotifyEvent); ok {
+				// Check if the property that changed is _NET_ACTIVE_WINDOW
+				if propEv.Atom == net_active_window {
+					// Get the new active window
+					activeWin, err := get_active_window(x)
+					if err == nil && activeWin != "" {
+						// Call the callback with the new active window
+						callback(activeWin)
+					}
+				}
+			}
+		}
+	}()
+
+	return nil
+}
+
 func _xprop(x *XUtil, windowID, property string) (string, error) {
 	var wid uint64
 	if strings.HasPrefix(windowID, "0x") {

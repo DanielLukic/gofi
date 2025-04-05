@@ -29,16 +29,15 @@ func (e *DependencyError) Error() string {
 }
 
 func CheckDependencies() error {
+	dependencies := []string{"wmctrl", "fzf", "st", "xkill"}
+
 	var missing []string
-	if err := CheckDependency("wmctrl"); err != nil {
-		missing = append(missing, "wmctrl")
+	for _, dep := range dependencies {
+		if err := CheckDependency(dep); err != nil {
+			missing = append(missing, dep)
+		}
 	}
-	if err := CheckDependency("fzf"); err != nil {
-		missing = append(missing, "fzf")
-	}
-	if err := CheckDependency("st"); err != nil {
-		missing = append(missing, "st")
-	}
+
 	if len(missing) > 0 {
 		return &DependencyError{Missing: missing}
 	}

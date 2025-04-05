@@ -2,55 +2,56 @@
 
 A window switcher for Linux, inspired by [rofi](https://github.com/davatorium/rofi).
 
-A Cursor IDE experiment. Built with Cursor IDE.
+A vibe-code experiment. Built with Cursor and Windsurf IDEs.
 
 ## Features
 
-- Fast window switching using ST + FZF
+- Fast window switching with Alt-Tab style window ordering
 - Alternative terminal UI mode with fuzzy finder
 - Shows window desktop, title, name, command, and class
-- Sorts windows by desktop
-- Supports both X11 and Wayland (via wmctrl)
-- GUI mode and TUI mode
-
-1. Filter Properties
-   - `Desktop`: Which desktop number the window is on
-   - `Command`: Process name that started the window
-   - `Name`: Full window class with instance (e.g. Mail.thunderbird)
-   - `Class`: Short window class (e.g. thunderbird)
-   - `Title`: Window title
-
-2. Sorting/Grouping
-   - Group by desktop
-   - Current desktop windows shown first
-   - Other desktops follow in numerical order
-   - Within each desktop group, keep sort order from wmctrl
-
-3. Implementation Requirements
-   - wmctrl: Used for getting window metadata (Command, Class, Desktop)
-   - fzf: Used for fuzzy finding (default mode)
-   - st: Used for terminal emulation (default)
-
-This specification is binding and should not be modified without explicit user agreement.
-
-## Installation
-
-```bash
-go install github.com/dl/gofi@latest
-```
 
 ## Usage
 
-```bash
-gofi [flags]
+```
+./gofi [options]
 ```
 
-### Flags
+### Command-line Options
 
-- `--tui`: Use terminal UI mode with fuzzy finder instead of ST+FZF
+- `-tui`: Use terminal UI mode instead of graphical mode
+- `-daemon`: Run as a daemon (background process)
+- `-restart`: Force restart the daemon
+- `-kill`: Kill the running daemon
+
+### Notes
+
+- Starting the daemon is handled automatically by the application.
+- The `-restart` flag can be used for testing.
+- To stop the daemon, use the `-kill` flag.
+
+## Window Properties
+
+- `Desktop`: Which desktop number the window is on
+- `Command`: Process name that started the window
+- `Name`: Full window class with instance (e.g. Mail.thunderbird)
+- `Class`: Short window class (e.g. thunderbird)
+- `Title`: Window title
+
+## Window Ordering
+
+- Previously active window is always shown first
+- Windows are ordered by activation history
 
 ## Dependencies
 
-- `wmctrl`: For window management
-- `fzf`: For fuzzy finding (default mode)
-- `st`: For terminal emulation (default)
+The following tools are required:
+- `wmctrl`: Used for activating windows and closing active gofi gui
+- `fzf`: Used for fuzzy finding
+- `st`: Used for terminal emulation
+- `xkill`: Used for killing windows via <ctrl-x> in gui mode
+
+## Building
+
+```
+./build.sh
+```

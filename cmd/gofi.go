@@ -13,7 +13,31 @@ import (
 
 func main() {
 	tuiMode := flag.Bool("tui", false, "Use terminal UI mode")
+	daemonMode := flag.Bool("daemon", false, "Run as a daemon")
+	restartMode := flag.Bool("restart", false, "Force restart daemon")
+	killMode := flag.Bool("kill", false, "Kill daemon")
 	flag.Parse()
+
+	if *daemonMode {
+		pkg.Log("Starting daemon...")
+		pkg.RunDaemon()
+		return
+	}
+
+	if *killMode {
+		pkg.KillDaemon()
+		return
+	}
+
+	if err := pkg.EnsureDaemon(*restartMode); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
+	if err := pkg.HelloDaemon(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
 
 	if err := pkg.CheckDependencies(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -21,7 +45,6 @@ func main() {
 	}
 
 	var err error
-
 	if *tuiMode {
 		err = pkg.TuiSelectWindow()
 	} else {

@@ -15,7 +15,10 @@ func GuiSelectWindow() error {
 	}
 	defer x.Close()
 
-	windows, _ := ListWindows(x)
+	windows, err := AcquireActiveWindowList()
+	if err != nil {
+		return fmt.Errorf("error getting active window list: %v", err)
+	}
 
 	_close_existing_instance(windows)
 

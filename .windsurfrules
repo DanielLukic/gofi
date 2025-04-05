@@ -1,0 +1,8 @@
+1. Write small functions:
+  - Aim for 10-15 lines per function.
+  - Less than 10 whenever possible.
+  - Hard limit at 30 lines.
+2. Use snake_case consistently for everything:
+  - Use snake_case for functions and variables.
+  - Use snake_case for struct fields and methods.
+  - Allow exceptions when Go requires PascalCase etc.
