@@ -37,10 +37,11 @@ export FZF_DEFAULT_OPTS="
   --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
   --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
   --color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
+  --bind='ctrl-x:execute(echo {+} | sed \"s/.*\(0x[0-9a-f]*\)$/\1/\" | xargs xkill -id)+abort'
 "
 
 selected=$(cat ` + listFile + ` | fzf | sed 's/.*0x/0x/g')
-wmctrl -i -a $selected`
+[ -n "$selected" ] && wmctrl -i -a $selected`
 
 	if err := os.WriteFile(execFile, []byte(execScript), 0744); err != nil {
 		return fmt.Errorf("error writing exec file: %v", err)
