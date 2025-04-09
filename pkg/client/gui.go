@@ -65,13 +65,24 @@ func writeWindowList(formattedLines []string, listFile string) {
 //
 //	tempFiles: Map of temporary files
 func createFzfScript(tempFiles map[string]string) {
-	script := fmt.Sprintf(`#!/bin/sh
+	script := fmt.Sprintf(`#!/bin/bash
+
+get_win_id() {
+    sed "s/.*0x/0x/;s/}//"
+}
+export -f get_win_id
+
+kill_window() {
+    xargs xkill -id >> /tmp/gofi.log 2>&1
+}
+export -f kill_window
+
 # Catppuccin Mocha colors
 export FZF_DEFAULT_OPTS="
   --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
   --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
   --color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
-  --bind='ctrl-x:execute(echo {{+}} | sed \"s/.*\\(0x[0-9a-f]*\\)\\$/\\1/\" | xargs xkill -id)+abort'
+  --bind='alt-x:execute(echo {{+}} | get_win_id | kill_window >> /tmp/gofi.log 2>&1)+abort'
 "
 selected=$(cat %s | %s | sed 's/.*0x/0x/g')
 if [ -n "$selected" ]; then
