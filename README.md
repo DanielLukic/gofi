@@ -16,6 +16,22 @@ Gofi employs a client-daemon model:
     client uses `wmctrl` to bring it into focus. `wmctrl` and `xkill` are also
     used for managing existing `gofi` windows.
 
+## Usage
+
+Two primary scenarios:
+
+1. Reconfigure your "Alt-Tab" (or equivalent) to call `gofi`. It will show a terminal
+and run gofi inside it.
+
+2. Call `gofi -tui` inside a terminal to run gofi without spawning a new terminal.
+
+A daemon will be auto-spawned in both cases, if not already running.
+
+Use "Enter" to select the window to activate aka jump to. Type a few letters to find
+the window you want to select.
+
+Note: "Alt-x" will `xkill` the selected window.
+
 ## Dependencies
 
 Gofi requires the following external programs to be installed and available in your

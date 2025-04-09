@@ -84,6 +84,13 @@ export FZF_DEFAULT_OPTS="
   --color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
   --bind='alt-x:execute(echo {{+}} | get_win_id | kill_window >> /tmp/gofi.log 2>&1)+abort'
 "
+
+# Use wmctrl to activate SKIP_TASKBAR
+gofi=$(xdotool search --name '^gofi$')
+if [ -n "$gofi" ]; then
+    wmctrl -i -r $gofi -b add,skip_taskbar
+fi
+
 selected=$(cat %s | %s | sed 's/.*0x/0x/g')
 if [ -n "$selected" ]; then
     echo "$selected" > %s
