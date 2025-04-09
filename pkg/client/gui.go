@@ -21,14 +21,14 @@ var FuzzyFinder = "fzf"
 // Returns:
 //
 //	*shared.Window: Selected window or nil
-func SelectWindow(windows []shared.Window) {
+func SelectWindow(windows []shared.Window, tuiFlag bool) {
 	formattedLines := FormatWindows(windows, nil, nil)
 	tempFiles := createTempFiles()
 	defer cleanupTempFiles(tempFiles)
 
 	writeWindowList(formattedLines, tempFiles["list"])
 	createFzfScript(tempFiles)
-	runTerminalWithFzf(tempFiles["exec"])
+	runTerminalWithFzf(tempFiles["exec"], tuiFlag)
 }
 
 // createTempFiles creates temporary files for fzf script
@@ -101,13 +101,21 @@ fi
 // Args:
 //
 //	scriptPath: Path to script file
-func runTerminalWithFzf(scriptPath string) {
-	cmd := exec.Command("st",
-		"-g", "124x30+1200+800", // geometry: widthxheight+x+y
-		"-f", "Monospace:size=12",
-		"-t", "gofi",
-		"--", scriptPath,
-	)
+//	tuiFlag: Whether to run in TUI mode
+func runTerminalWithFzf(scriptPath string, tuiFlag bool) {
+	var cmd *exec.Cmd
+	if tuiFlag {
+		cmd = exec.Command("bash", "-c", scriptPath)
+	} else {
+		cmd = exec.Command("st",
+			"-g", "124x30+1200+800", // geometry: widthxheight+x+y
+			"-f", "Monospace:size=12",
+			"-t", "gofi",
+			"--", scriptPath,
+		)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
 		log.Error("Failed to run terminal: %s", err)

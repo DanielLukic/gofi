@@ -11,7 +11,7 @@ import (
 // Args:
 //
 //	args: Command line arguments
-func ClientMain(log_level string) {
+func ClientMain(log_level string, tuiFlag bool) {
 	// Check dependencies
 	if err := client.CheckDependencies(); err != nil {
 		log.Error(err.Error())
@@ -29,7 +29,7 @@ func ClientMain(log_level string) {
 	}
 
 	// Create windows and select
-	client.SelectWindow(data)
+	client.SelectWindow(data, tuiFlag)
 }
 
 func ensureDaemonRunning(log_level string) {

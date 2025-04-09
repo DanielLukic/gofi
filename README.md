@@ -41,6 +41,11 @@ To run the daemon in the background:
 gofi --daemon
 ```
 
+To not spawn a new terminal:
+```bash
+gofi -tui
+```
+
 To stop a running daemon:
 ```bash
 gofi --kill

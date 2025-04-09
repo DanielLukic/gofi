@@ -38,7 +38,7 @@ func TestSelectWindowWithSimpleFinder(t *testing.T) {
 	}
 
 	// Call SelectWindow (it returns void)
-	client.SelectWindow(windows)
+	client.SelectWindow(windows, true)
 
 	// Since SelectWindow returns void, we cannot check the selected window here.
 	// This test now only verifies that the function runs without panic

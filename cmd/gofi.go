@@ -10,6 +10,7 @@ import (
 func main() {
 	// Define command-line flags
 	daemonFlag := flag.Bool("daemon", false, "Run as daemon")
+	tuiFlag := flag.Bool("tui", false, "Run in TUI mode")
 	kill := flag.Bool("kill", false, "Kill daemon")
 	logLevel := flag.String("log", "info", "Set logging level (off, error, warning, info, debug)")
 
@@ -27,6 +28,6 @@ func main() {
 		DaemonMain()
 	} else {
 		log.Debug("Starting client")
-		ClientMain(*logLevel)
+		ClientMain(*logLevel, *tuiFlag)
 	}
 }
