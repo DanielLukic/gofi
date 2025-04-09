@@ -1,60 +1,32 @@
-//go:build !gui
-// +build !gui
-
 package main
 
 import (
 	"flag"
-	"fmt"
-	"os"
 
-	"gofi/pkg"
+	"gofi/pkg/log"
+	"gofi/pkg/shared"
 )
 
 func main() {
-	tuiMode := flag.Bool("tui", false, "Use terminal UI mode")
-	daemonMode := flag.Bool("daemon", false, "Run as a daemon")
-	restartMode := flag.Bool("restart", false, "Force restart daemon")
-	killMode := flag.Bool("kill", false, "Kill daemon")
+	// Define command-line flags
+	daemonFlag := flag.Bool("daemon", false, "Run as daemon")
+	kill := flag.Bool("kill", false, "Kill daemon")
+	logLevel := flag.String("log", "info", "Set logging level (off, error, warning, info, debug)")
+
 	flag.Parse()
 
-	if *daemonMode {
-		pkg.Log("Starting daemon...")
-		pkg.RunDaemon()
-		return
-	}
+	// Set up logger
+	log.SetupLogger(*logLevel, *daemonFlag)
 
-	if *killMode {
-		pkg.KillDaemon()
-		return
-	}
-
-	if err := pkg.EnsureDaemon(*restartMode); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-
-	if err := pkg.HelloDaemon(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-
-	if err := pkg.CheckDependencies(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	var err error
-	if *tuiMode {
-		err = pkg.TuiSelectWindow()
+	log.Debug("Starting gofi")
+	if *kill {
+		log.Debug("Killing daemon")
+		shared.KillDaemon()
+	} else if *daemonFlag {
+		log.Debug("Starting daemon")
+		DaemonMain()
 	} else {
-		err = pkg.GuiSelectWindow()
+		log.Debug("Starting client")
+		ClientMain(*logLevel)
 	}
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error selecting window: %v\n", err)
-		os.Exit(1)
-	}
-
-	os.Exit(0)
 }

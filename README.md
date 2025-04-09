@@ -1,57 +1,57 @@
 # gofi
 
-A window switcher for Linux, inspired by [rofi](https://github.com/davatorium/rofi).
+Gofi is a tool for listing and selecting active windows on your desktop. It uses a
+client-daemon architecture for efficient window monitoring and selection.
 
-A vibe-code experiment. Built with Cursor and Windsurf IDEs.
+## How it Works
 
-## Features
+Gofi employs a client-daemon model:
 
-- Fast window switching with Alt-Tab style window ordering
-- Alternative terminal UI mode with fuzzy finder
-- Shows window desktop, title, name, command, and class
+*   **Daemon:** Runs in the background, monitors X11 window events (creation,
+    deletion, focus changes). It maintains an up-to-date list of active windows.
 
-## Usage
-
-```
-./gofi [options]
-```
-
-### Command-line Options
-
-- `-tui`: Use terminal UI mode instead of graphical mode
-- `-daemon`: Run as a daemon (background process)
-- `-restart`: Force restart the daemon
-- `-kill`: Kill the running daemon
-
-### Notes
-
-- Starting the daemon is handled automatically by the application.
-- The `-restart` flag can be used for testing.
-- To stop the daemon, use the `-kill` flag.
-
-## Window Properties
-
-- `Desktop`: Which desktop number the window is on
-- `Command`: Process name that started the window
-- `Name`: Full window class with instance (e.g. Mail.thunderbird)
-- `Class`: Short window class (e.g. thunderbird)
-- `Title`: Window title
-
-## Window Ordering
-
-- Previously active window is always shown first
-- Windows are ordered by activation history
+*   **Client:** Communicates with the daemon via IPC to retrieve the window list.
+    It then uses the `st` terminal to display this list, leveraging `fzf` for
+    interactive fuzzy searching and selection. Once a window is selected, the
+    client uses `wmctrl` to bring it into focus. `wmctrl` and `xkill` are also
+    used for managing existing `gofi` windows.
 
 ## Dependencies
 
-The following tools are required:
-- `wmctrl`: Used for activating windows and closing active gofi gui
-- `fzf`: Used for fuzzy finding
-- `st`: Used for terminal emulation
-- `xkill`: Used for killing windows via <ctrl-x> in gui mode
+Gofi requires the following external programs to be installed and available in your
+`$PATH`:
 
-## Building
+*   `st` (Simple Terminal)
+*   `fzf` (Command-line fuzzy finder)
+*   `wmctrl` (Utility to interact with EWMH/NetWM compatible X Window Managers)
+*   `xkill` (Tool to kill an X client by its X resource)
 
+*   X11 Libraries (Development libraries might be required for building, e.g.,
+    `libx11-dev` on Debian/Ubuntu).
+
+## Usage
+
+To list and select windows (default behavior):
+```bash
+gofi
 ```
-./build.sh
+
+To run the daemon in the background:
+```bash
+gofi --daemon
 ```
+
+To stop a running daemon:
+```bash
+gofi --kill
+```
+
+To change the log level (e.g., to debug):
+```bash
+gofi --log debug
+```
+
+## License
+
+This project is released into the public domain under The Unlicense - see the
+[LICENSE](LICENSE) file for details.

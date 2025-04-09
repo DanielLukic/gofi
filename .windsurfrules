@@ -5,4 +5,15 @@
 2. Use snake_case consistently for everything:
   - Use snake_case for functions and variables.
   - Use snake_case for struct fields and methods.
-  - Allow exceptions when Go requires PascalCase etc.
+  - Allow exceptions when Go requires PascalCase etc. [GOLANG ONLY]
+3. Work in small commit steps:
+  - Separate refactor and implement steps.
+  - Commit every step.
+4. For essential parts write tests:
+  - a. Write a test first that captures the functionality you want to implement.
+  - b. Then implement the change.
+  - d. As long as test fails, refactor/fix as necessary. Until green.
+  - c. If test is green, commit.
+5. Use logging:
+  - Use logging instead of print statements.
+  - Use the logging module.
