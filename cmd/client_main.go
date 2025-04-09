@@ -12,12 +12,6 @@ import (
 //
 //	args: Command line arguments
 func ClientMain(log_level string, tuiFlag bool) {
-	// Check dependencies
-	if err := client.CheckDependencies(); err != nil {
-		log.Error(err.Error())
-		os.Exit(1)
-	}
-
 	// Kill existing gofi windows
 	client.KillExistingGofiWindows(nil)
 
