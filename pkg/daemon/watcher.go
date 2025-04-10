@@ -129,18 +129,17 @@ func (ww *WindowWatcher) windowEventThread() {
 
 			// Filter events and update list only for relevant ones
 			switch eventName {
-			case "PropertyNotifyEvent",
+			case
+				"PropertyNotifyEvent",
 				"MapNotifyEvent",
 				"DestroyNotifyEvent",
 				"CreateNotifyEvent":
-				// We received a valid event name, log it
-				// log.Debug("Received window event: %s", eventName)
 				ww.api.UpdateWindowList()
-			case "UnmapNotifyEvent", "ConfigureNotifyEvent":
-				// Ignore these events for list updates
+			case
+				"UnmapNotifyEvent",
+				"ConfigureNotifyEvent":
 				// log.Debug("Ignoring window event: %s", eventName)
 			default:
-				// Log unhandled event types if necessary
 				log.Warn("Unhandled window event type: %s", eventName)
 			}
 		}

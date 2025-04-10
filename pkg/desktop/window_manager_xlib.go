@@ -138,16 +138,6 @@ func (wm *XLibWindowManager) formatEventString(event interface{}) string {
 		} else {
 			eventName = "PropertyNotify:Other" // Fallback
 		}
-	case *xproto.MapNotifyEvent:
-		eventName = "MapNotify"
-	case *xproto.DestroyNotifyEvent:
-		eventName = "DestroyNotify"
-	case *xproto.CreateNotifyEvent:
-		eventName = "CreateNotify"
-	case *xproto.UnmapNotifyEvent:
-		eventName = "UnmapNotify"
-	case *xproto.ConfigureNotifyEvent:
-		eventName = "ConfigureNotify"
 	default:
 		eventName = wm.getSimplifiedTypeName(ev) // Generic fallback
 	}
