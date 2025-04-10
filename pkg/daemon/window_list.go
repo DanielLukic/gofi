@@ -80,6 +80,11 @@ func (wl *WindowList) ClientList() []*shared.Window {
 	// Perform Alt-Tab swap
 	wl.applyAltTabSwap(presentedList)
 
+	// We have to update all titles now
+	for _, w := range presentedList {
+		w.Title = wl.wm.WindowTitle(w.ID)
+	}
+
 	return presentedList
 }
 
