@@ -37,17 +37,17 @@ func (h *History) Initialize(windows []*shared.Window) {
 //
 //	bool: True if the history was modified.
 func (h *History) KeepOnly(windows []*shared.Window) bool {
-	// Create a set of IDs to keep for efficient lookup
-	keepIDs := make(map[int]struct{}, len(windows))
+	// Create a map of windows for efficient lookup
+	windowMap := make(map[int]*shared.Window, len(windows))
 	for _, w := range windows {
-		keepIDs[w.ID] = struct{}{}
+		windowMap[w.ID] = w
 	}
 
 	// Filter the existing history
-	keptWindows := make([]*shared.Window, 0, len(h.windows)) // Pre-allocate capacity
+	keptWindows := make([]*shared.Window, 0, len(h.windows))
 	for _, histWindow := range h.windows {
-		if _, shouldKeep := keepIDs[histWindow.ID]; shouldKeep {
-			keptWindows = append(keptWindows, histWindow)
+		if w, ok := windowMap[histWindow.ID]; ok {
+			keptWindows = append(keptWindows, w)
 		}
 	}
 
