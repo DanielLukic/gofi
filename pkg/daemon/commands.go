@@ -27,7 +27,7 @@ func HandleHello() string {
 func HandleActiveWindowList(windows []shared.Window) string {
 	jsonData, err := json.Marshal(windows)
 	if err != nil {
-		log.Error(fmt.Sprintf("Error marshaling window list: %s", err))
+		log.Error("Error marshaling window list: %s", err)
 		return fmt.Sprintf("ERROR: %s", err)
 	}
 

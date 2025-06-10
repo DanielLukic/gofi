@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"fmt"
 	"gofi/pkg/desktop"
 	"gofi/pkg/log"
 	"gofi/pkg/shared"
@@ -116,19 +115,17 @@ func (wl *WindowList) applyAltTabSwap(windows []*shared.Window) {
 func (wl *WindowList) logWindowList(windows []*shared.Window) {
 	log.Debug("Window state changed. Current list (%d windows):", len(windows))
 	if len(windows) == 0 {
+		log.Debug("No windows found")
 		return
 	}
-	// Header (optional, uncomment for alignment reference)
-	// log.Debug("  [%2s]%10s %-*s %s", "##", "ID", logTypeWidth, "Type", "Title (truncated)")
+	
+	// Log each window's details
 	for i, w := range windows {
-		// Assume w is not nil
 		title := w.Title
 		if len(title) > logTitleWidth {
 			title = title[:logTitleWidth] // Truncate title
 		}
-
-		// Format the line
-		logLine := fmt.Sprintf("%2d:%10d %s %-7s %s (%d)",
+		log.Debug("%2d: %10d %s %-7s %s (%d)",
 			i,
 			w.ID,
 			w.DesktopStr(),
@@ -136,7 +133,6 @@ func (wl *WindowList) logWindowList(windows []*shared.Window) {
 			title,
 			w.PID,
 		)
-		log.Debug(logLine)
 	}
 	log.Debug("----------------------------------------")
 }

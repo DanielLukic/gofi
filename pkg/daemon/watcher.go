@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"gofi/pkg/desktop"
@@ -156,7 +155,7 @@ func (ww *WindowWatcher) logError(format string, args ...interface{}) {
 	defer ww.mutex.Unlock()
 
 	if !ww.isStopping {
-		log.Error(fmt.Sprintf(format, args...))
+		log.Error(format, args...)
 	}
 }
 

@@ -2,32 +2,46 @@ package main
 
 import (
 	"flag"
+	"os"
 
+	"gofi/pkg/gofi"
 	"gofi/pkg/log"
-	"gofi/pkg/shared"
 )
 
 func main() {
-	// Define command-line flags
-	daemonFlag := flag.Bool("daemon", false, "Run as daemon")
-	tuiFlag := flag.Bool("tui", false, "Run in TUI mode")
-	kill := flag.Bool("kill", false, "Kill daemon")
 	logLevel := flag.String("log", "info", "Set logging level (off, error, warning, info, debug)")
-
+	kill := flag.Bool("kill", false, "Kill running gofi instance")
 	flag.Parse()
 
-	// Set up logger
-	log.SetupLogger(*logLevel, *daemonFlag)
+	log.SetupLogger(*logLevel, false)
 
-	log.Debug("Starting gofi")
 	if *kill {
-		log.Debug("Killing daemon")
-		shared.KillDaemon()
-	} else if *daemonFlag {
-		log.Debug("Starting daemon")
-		DaemonMain()
-	} else {
-		log.Debug("Starting client")
-		ClientMain(*logLevel, *tuiFlag)
+		log.Debug("Killing gofi instance")
+		gofi.KillInstance()
+		os.Exit(0)
 	}
+
+	instanceManager := gofi.NewInstanceManager()
+	defer instanceManager.Cleanup()
+
+	if instanceManager.CheckExistingInstance() {
+		log.Debug("Another instance already running, signaled and exiting")
+		os.Exit(0)
+	}
+
+	app := gofi.NewApp()
+	defer app.Cleanup()
+
+	if err := instanceManager.StartIPCServer(app); err != nil {
+		log.Error("Failed to start IPC server: %s", err)
+		os.Exit(1)
+	}
+
+	if err := app.Start(); err != nil {
+		log.Error("Failed to start app: %s", err)
+		os.Exit(1)
+	}
+
+	app.Show()
+	app.Run()
 }

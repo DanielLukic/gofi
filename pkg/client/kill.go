@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -32,7 +31,7 @@ func KillExistingGofiWindows(ours []string) {
 
 	// Kill each gofi window
 	for _, window := range gofis {
-		log.Debug(fmt.Sprintf("Killing gofi window: %s", window.Title))
+		log.Debug("Killing gofi window: %s", window.Title)
 
 		if KillWindowWmctrl(*window) {
 			continue
@@ -40,7 +39,7 @@ func KillExistingGofiWindows(ours []string) {
 		if KillWindowXkill(*window) {
 			continue
 		}
-		log.Error(fmt.Sprintf("Failed to kill window: %s", window.Title))
+		log.Error("Failed to kill window: %s", window.Title)
 	}
 }
 

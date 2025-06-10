@@ -17,15 +17,15 @@ import (
 //
 //	bool: True if window was killed successfully
 func KillWindowWmctrl(window shared.Window) bool {
-	log.Debug(fmt.Sprintf("Attempting to kill window %d", window.ID))
+	log.Debug("Attempting to kill window %d", window.ID)
 
 	cmd := exec.Command("wmctrl", "-ic", fmt.Sprintf("%d", window.ID))
 	if err := cmd.Run(); err != nil {
-		log.Error(fmt.Sprintf("Failed to kill window %d: %s", window.ID, err))
+		log.Error("Failed to kill window %d: %s", window.ID, err)
 		return false
 	}
 
-	log.Debug(fmt.Sprintf("Successfully killed window %d", window.ID))
+	log.Debug("Successfully killed window %d", window.ID)
 	return true
 }
 
@@ -38,14 +38,14 @@ func KillWindowWmctrl(window shared.Window) bool {
 //
 //	bool: True if window was killed successfully
 func KillWindowXkill(window shared.Window) bool {
-	log.Debug(fmt.Sprintf("Attempting to kill window %d", window.ID))
+	log.Debug("Attempting to kill window %d", window.ID)
 
 	cmd := exec.Command("xkill", "-id", fmt.Sprintf("%d", window.ID))
 	if err := cmd.Run(); err != nil {
-		log.Error(fmt.Sprintf("Failed to kill window %d: %s", window.ID, err))
+		log.Error("Failed to kill window %d: %s", window.ID, err)
 		return false
 	}
 
-	log.Debug(fmt.Sprintf("Successfully killed window %d", window.ID))
+	log.Debug("Successfully killed window %d", window.ID)
 	return true
 }
