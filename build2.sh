@@ -1,0 +1,1 @@
+go build -o gofi2 ./cmd/gofi2 
